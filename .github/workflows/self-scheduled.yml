@@ -32,7 +32,6 @@ jobs:
       matrix:
         machine_type: [single-gpu]
     runs-on: [self-hosted, doc-tests-gpu]
-    needs: setup
     container:
       image: huggingface/transformers-pytorch-deepspeed-latest-gpu-test
       options: --gpus all --shm-size "16gb" --ipc host -v /mnt/cache/.cache/huggingface:/mnt/cache/
