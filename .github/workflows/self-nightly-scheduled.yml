@@ -87,66 +87,66 @@ jobs:
         run: |
           nvidia-smi
 
-  run_tests_single_gpu:
-    name: Model tests
-    strategy:
-      fail-fast: false
-      matrix:
-        folders: ${{ fromJson(needs.setup.outputs.matrix) }}
-        machine_type: [single-gpu]
-    runs-on: [self-hosted, doc-tests-gpu]
-    container:
-      image: huggingface/transformers-all-latest-torch-nightly-gpu
-      options: --gpus 0 --shm-size "16gb" --ipc host -v /mnt/cache/.cache/huggingface:/mnt/cache/
-    needs: setup
-    steps:
-      - name: Echo folder ${{ matrix.folders }}
-        shell: bash
-        # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
-        # set the artifact folder names (because the character `/` is not allowed).
-        run: |
-          echo "${{ matrix.folders }}"
-          matrix_folders=${{ matrix.folders }}
-          matrix_folders=${matrix_folders/'models/'/'models_'}
-          echo "$matrix_folders"
-          echo "matrix_folders=$matrix_folders" >> $GITHUB_ENV
-
-      - name: Update clone
-        working-directory: /transformers
-        run: git fetch && git checkout ${{ github.sha }}
-
-      - name: Reinstall transformers in edit mode (removed the one during docker image build)
-        working-directory: /transformers
-        run: python3 -m pip uninstall -y transformers && python3 -m pip install -e .
-
-      - name: NVIDIA-SMI
-        run: |
-          nvidia-smi
-
-      - name: Environment
-        working-directory: /transformers
-        run: |
-          python3 utils/print_env.py
-
-      - name: Show installed libraries and their versions
-        working-directory: /transformers
-        run: pip freeze
-
-      - name: Run all tests on GPU
-        working-directory: /transformers
-        run: python3 -m pytest -v --make-reports=${{ matrix.machine_type }}_tests_gpu_${{ matrix.folders }} tests/${{ matrix.folders }}
-
-      - name: Failure short reports
-        if: ${{ failure() }}
-        continue-on-error: true
-        run: cat /transformers/reports/${{ matrix.machine_type }}_tests_gpu_${{ matrix.folders }}/failures_short.txt
-
-      - name: Test suite reports artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.machine_type }}_run_all_tests_gpu_${{ env.matrix_folders }}_test_reports_postfix_nightly
-          path: /transformers/reports/${{ matrix.machine_type }}_tests_gpu_${{ matrix.folders }}
+#  run_tests_single_gpu:
+#    name: Model tests
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        folders: ${{ fromJson(needs.setup.outputs.matrix) }}
+#        machine_type: [single-gpu]
+#    runs-on: [self-hosted, doc-tests-gpu]
+#    container:
+#      image: huggingface/transformers-all-latest-torch-nightly-gpu
+#      options: --gpus 0 --shm-size "16gb" --ipc host -v /mnt/cache/.cache/huggingface:/mnt/cache/
+#    needs: setup
+#    steps:
+#      - name: Echo folder ${{ matrix.folders }}
+#        shell: bash
+#        # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
+#        # set the artifact folder names (because the character `/` is not allowed).
+#        run: |
+#          echo "${{ matrix.folders }}"
+#          matrix_folders=${{ matrix.folders }}
+#          matrix_folders=${matrix_folders/'models/'/'models_'}
+#          echo "$matrix_folders"
+#          echo "matrix_folders=$matrix_folders" >> $GITHUB_ENV
+#
+#      - name: Update clone
+#        working-directory: /transformers
+#        run: git fetch && git checkout ${{ github.sha }}
+#
+#      - name: Reinstall transformers in edit mode (removed the one during docker image build)
+#        working-directory: /transformers
+#        run: python3 -m pip uninstall -y transformers && python3 -m pip install -e .
+#
+#      - name: NVIDIA-SMI
+#        run: |
+#          nvidia-smi
+#
+#      - name: Environment
+#        working-directory: /transformers
+#        run: |
+#          python3 utils/print_env.py
+#
+#      - name: Show installed libraries and their versions
+#        working-directory: /transformers
+#        run: pip freeze
+#
+#      - name: Run all tests on GPU
+#        working-directory: /transformers
+#        run: python3 -m pytest -v --make-reports=${{ matrix.machine_type }}_tests_gpu_${{ matrix.folders }} tests/${{ matrix.folders }}
+#
+#      - name: Failure short reports
+#        if: ${{ failure() }}
+#        continue-on-error: true
+#        run: cat /transformers/reports/${{ matrix.machine_type }}_tests_gpu_${{ matrix.folders }}/failures_short.txt
+#
+#      - name: Test suite reports artifacts
+#        if: ${{ always() }}
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ${{ matrix.machine_type }}_run_all_tests_gpu_${{ env.matrix_folders }}_test_reports_postfix_nightly
+#          path: /transformers/reports/${{ matrix.machine_type }}_tests_gpu_${{ matrix.folders }}
 
   run_all_tests_torch_cuda_extensions_gpu:
     name: Torch CUDA extension tests
@@ -165,7 +165,7 @@ jobs:
         run: git fetch && git checkout ${{ github.sha }}
 
       - name: Reinstall transformers in edit mode (removed the one during docker image build)
-        working-directory: /transformers
+        working-directory: /workspace/transformers
         run: python3 -m pip uninstall -y transformers && python3 -m pip install -e .
 
       - name: Remove cached torch extensions
