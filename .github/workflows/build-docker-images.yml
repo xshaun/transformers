@@ -40,6 +40,6 @@ jobs:
         with:
           context: ./docker/transformers-pytorch-deepspeed-latest-gpu
           build-args: |
-            REF=main
+            REF=build-cu117
           push: true
           tags: huggingface/transformers-pytorch-deepspeed-latest-gpu${{ inputs.image_postfix }}-test
