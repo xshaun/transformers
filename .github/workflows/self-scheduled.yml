@@ -38,7 +38,7 @@ jobs:
     steps:
       - name: Update clone
         working-directory: /workspace/transformers
-        run: git fetch && git checkout ${{ github.sha }}
+        run: git fetch && git checkout a8732e09bb230848f1ab0f3cab9e533b412ca143 && python3 -m pip install -e .
 
       - name: Remove cached torch extensions
         run: rm -rf /github/home/.cache/torch_extensions/
