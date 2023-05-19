@@ -111,10 +111,6 @@ jobs:
         working-directory: /transformers
         run: git fetch && git checkout ${{ inputs.sha }}
 
-      - name: Reinstall transformers in edit mode (removed the one during docker image build)
-        working-directory: /transformers
-        run: python3 -m pip uninstall -y transformers && python3 -m pip install -e .
-
       - name: Echo folder ${{ matrix.folders }}
         shell: bash
         # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
