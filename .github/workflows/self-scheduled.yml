@@ -33,7 +33,7 @@ jobs:
         machine_type: [single-gpu]
     runs-on: [self-hosted, doc-tests-gpu]
     container:
-      image: huggingface/transformers-pytorch-deepspeed-latest-gpu-test
+      image: huggingface/transformers-pytorch-deepspeed-latest-gpu
       options: --gpus all --shm-size "16gb" --ipc host -v /mnt/cache/.cache/huggingface:/mnt/cache/
     steps:
       - name: Update clone
