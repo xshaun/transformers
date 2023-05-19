@@ -3,7 +3,7 @@ name: Build docker images (scheduled)
 on:
   push:
     branches:
-      - build-cu117-2
+      - build-cu117
   repository_dispatch:
   workflow_call:
     inputs:
