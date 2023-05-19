@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 ARG PYTORCH='2.0.1'
 # Example: `cu102`, `cu113`, etc.
-ARG CUDA='cu117'
+ARG CUDA='cu118'
 
 RUN apt -y update
 RUN apt install -y libaio-dev
