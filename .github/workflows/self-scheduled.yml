@@ -55,4 +55,5 @@ jobs:
 
       - name: Run all tests on GPU
         working-directory: /transformers
-        run: python3 -m pytest -v tests/trainer
+        # run: python3 -m pytest -v tests/trainer
+        run: python3 -m pytest -v tests/pipelines
