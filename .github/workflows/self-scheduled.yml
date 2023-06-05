@@ -27,7 +27,7 @@ env:
 jobs:
   run_tests_single_gpu:
     name: Model tests
-    runs-on: [single-gpu,docker-past-ci]
+    runs-on: [single-gpu-docker-past-ci]
     container:
       image: huggingface/transformers-all-latest-gpu
       options: --gpus 0 --shm-size "16gb" --ipc host -v /mnt/cache/.cache/huggingface:/mnt/cache/
