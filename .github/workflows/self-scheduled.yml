@@ -35,7 +35,7 @@ jobs:
       - name: Update clone
         working-directory: /transformers
         # run: git fetch && git checkout ${{ github.sha }}
-        run: git fetch && git checkout 003a0cf8cc4d78e47ef9debfb1e93a5c1197ca9a
+        run: git fetch && git checkout 50a56bedb6ec8a4f9ba455c184d187cfee2e9c81
 
       - name: Reinstall transformers in edit mode (remove the one installed during docker image build)
         working-directory: /transformers
