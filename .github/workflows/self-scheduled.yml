@@ -34,8 +34,8 @@ jobs:
     steps:
       - name: Update clone
         working-directory: /transformers
-        run: git fetch && git checkout ${{ github.sha }}
-        # run: git fetch && git checkout 3d7baef1
+        # run: git fetch && git checkout ${{ github.sha }}
+        run: git fetch && git checkout 814de8fac7456bd2ce50d1847505da829761bfdc
 
       - name: Reinstall transformers in edit mode (remove the one installed during docker image build)
         working-directory: /transformers
@@ -57,4 +57,4 @@ jobs:
       - name: Run all tests on GPU
         working-directory: /transformers
         # run: python3 -m pytest -v tests/trainer
-        run: python3 -m pytest -v tests/pipelines
+        run: python3 -m pytest -v tests/models/xglm
