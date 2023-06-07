@@ -116,8 +116,6 @@ class CircleCIJob:
                 }
             }
         )
-        steps.append({"run": {"name": "checkout", "command": "git checkout 33687a3f61f4f17145346b08ccf4ad698333d791"}})
-        steps.append({"run": {"name": "install transformers", "command": "pip install -e ."}})
         steps.append({"run": {"name": "Show installed libraries and their versions", "command": "pip freeze | tee installed.txt"}})
         steps.append({"store_artifacts": {"path": "~/transformers/installed.txt"}})
 
