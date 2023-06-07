@@ -69,6 +69,8 @@ To create the package for pypi.
     you need to go back to main before executing this.
 """
 
+a = 3
+
 import os
 import re
 import shutil
