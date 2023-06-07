@@ -562,8 +562,8 @@ def create_circleci_config(folder=None):
             else:
                 job.tests_to_run = [f for f in example_tests if f.startswith(f"examples/{framework}")]
 
-            if len(job.tests_to_run) > 0:
-                jobs.append(job)
+            # if len(job.tests_to_run) > 0:
+            #     jobs.append(job)
 
     doctest_file = os.path.join(folder, "doctest_list.txt")
     if os.path.exists(doctest_file):
