@@ -142,6 +142,10 @@ The following auto classes are available for the following natural language proc
 
 [[autodoc]] AutoModelForMaskGeneration
 
+### TFAutoModelForMaskGeneration
+
+[[autodoc]] TFAutoModelForMaskGeneration
+
 ### AutoModelForSeq2SeqLM
 
 [[autodoc]] AutoModelForSeq2SeqLM
@@ -250,6 +254,10 @@ The following auto classes are available for the following computer vision tasks
 
 [[autodoc]] AutoModelForMaskedImageModeling
 
+### TFAutoModelForMaskedImageModeling
+
+[[autodoc]] TFAutoModelForMaskedImageModeling
+
 ### AutoModelForObjectDetection
 
 [[autodoc]] AutoModelForObjectDetection
@@ -296,6 +304,10 @@ The following auto classes are available for the following audio tasks.
 
 ### AutoModelForAudioFrameClassification
 
+[[autodoc]] TFAutoModelForAudioClassification
+
+### TFAutoModelForAudioFrameClassification
+
 [[autodoc]] AutoModelForAudioFrameClassification
 
 ### AutoModelForCTC
@@ -317,6 +329,14 @@ The following auto classes are available for the following audio tasks.
 ### AutoModelForAudioXVector
 
 [[autodoc]] AutoModelForAudioXVector
+
+### AutoModelForTextToSpectrogram
+
+[[autodoc]] AutoModelForTextToSpectrogram
+
+### AutoModelForTextToWaveform
+
+[[autodoc]] AutoModelForTextToWaveform
 
 ## Multimodal
 

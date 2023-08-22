@@ -51,11 +51,13 @@ from .integrations import (
 from .utils import (
     is_accelerate_available,
     is_apex_available,
+    is_auto_gptq_available,
     is_bitsandbytes_available,
     is_bs4_available,
     is_cython_available,
     is_decord_available,
     is_detectron2_available,
+    is_essentia_available,
     is_faiss_available,
     is_flax_available,
     is_ftfy_available,
@@ -68,7 +70,9 @@ from .utils import (
     is_onnx_available,
     is_optimum_available,
     is_pandas_available,
+    is_peft_available,
     is_phonemizer_available,
+    is_pretty_midi_available,
     is_pyctcdecode_available,
     is_pytesseract_available,
     is_pytest_available,
@@ -77,6 +81,7 @@ from .utils import (
     is_safetensors_available,
     is_scipy_available,
     is_sentencepiece_available,
+    is_seqio_available,
     is_soundfile_availble,
     is_spacy_available,
     is_sudachi_available,
@@ -90,6 +95,7 @@ from .utils import (
     is_torch_bf16_cpu_available,
     is_torch_bf16_gpu_available,
     is_torch_neuroncore_available,
+    is_torch_npu_available,
     is_torch_tensorrt_fx_available,
     is_torch_tf32_available,
     is_torch_tpu_available,
@@ -173,6 +179,7 @@ _run_staging = parse_flag_from_env("HUGGINGFACE_CO_STAGING", default=False)
 _tf_gpu_memory_limit = parse_int_from_env("TF_GPU_MEMORY_LIMIT", default=None)
 _run_pipeline_tests = parse_flag_from_env("RUN_PIPELINE_TESTS", default=True)
 _run_tool_tests = parse_flag_from_env("RUN_TOOL_TESTS", default=False)
+_run_third_party_device_tests = parse_flag_from_env("RUN_THIRD_PARTY_DEVICE_TESTS", default=False)
 
 
 def is_pt_tf_cross_test(test_case):
@@ -365,6 +372,16 @@ def require_torch(test_case):
     return unittest.skipUnless(is_torch_available(), "test requires PyTorch")(test_case)
 
 
+def require_peft(test_case):
+    """
+    Decorator marking a test that requires PEFT.
+
+    These tests are skipped when PEFT isn't installed.
+
+    """
+    return unittest.skipUnless(is_peft_available(), "test requires PEFT")(test_case)
+
+
 def require_torchvision(test_case):
     """
     Decorator marking a test that requires Torchvision.
@@ -440,6 +457,13 @@ def require_sentencepiece(test_case):
     Decorator marking a test that requires SentencePiece. These tests are skipped when SentencePiece isn't installed.
     """
     return unittest.skipUnless(is_sentencepiece_available(), "test requires SentencePiece")(test_case)
+
+
+def require_seqio(test_case):
+    """
+    Decorator marking a test that requires SentencePiece. These tests are skipped when SentencePiece isn't installed.
+    """
+    return unittest.skipUnless(is_seqio_available(), "test requires Seqio")(test_case)
 
 
 def require_scipy(test_case):
@@ -579,11 +603,45 @@ def require_torch_neuroncore(test_case):
     )
 
 
+def require_torch_npu(test_case):
+    """
+    Decorator marking a test that requires NPU (in PyTorch).
+    """
+    return unittest.skipUnless(is_torch_npu_available(), "test requires PyTorch NPU")(test_case)
+
+
+def require_torch_multi_npu(test_case):
+    """
+    Decorator marking a test that requires a multi-NPU setup (in PyTorch). These tests are skipped on a machine without
+    multiple NPUs.
+
+    To run *only* the multi_npu tests, assuming all test names contain multi_npu: $ pytest -sv ./tests -k "multi_npu"
+    """
+    if not is_torch_npu_available():
+        return unittest.skip("test requires PyTorch NPU")(test_case)
+
+    return unittest.skipUnless(torch.npu.device_count() > 1, "test requires multiple NPUs")(test_case)
+
+
 if is_torch_available():
     # Set env var CUDA_VISIBLE_DEVICES="" to force cpu-mode
     import torch
 
-    torch_device = "cuda" if torch.cuda.is_available() else "cpu"
+    if "TRANSFORMERS_TEST_DEVICE" in os.environ:
+        torch_device = os.environ["TRANSFORMERS_TEST_DEVICE"]
+        try:
+            # try creating device to see if provided device is valid
+            _ = torch.device(torch_device)
+        except RuntimeError as e:
+            raise RuntimeError(
+                f"Unknown testing device specified by environment variable `TRANSFORMERS_TEST_DEVICE`: {torch_device}"
+            ) from e
+    elif torch.cuda.is_available():
+        torch_device = "cuda"
+    elif _run_third_party_device_tests and is_torch_npu_available():
+        torch_device = "npu"
+    else:
+        torch_device = "cpu"
 else:
     torch_device = None
 
@@ -741,6 +799,13 @@ def require_optimum(test_case):
     return unittest.skipUnless(is_optimum_available(), "test requires optimum")(test_case)
 
 
+def require_auto_gptq(test_case):
+    """
+    Decorator for auto_gptq dependency
+    """
+    return unittest.skipUnless(is_auto_gptq_available(), "test requires auto-gptq")(test_case)
+
+
 def require_phonemizer(test_case):
     """
     Decorator marking a test that requires phonemizer
@@ -760,6 +825,20 @@ def require_librosa(test_case):
     Decorator marking a test that requires librosa
     """
     return unittest.skipUnless(is_librosa_available(), "test requires librosa")(test_case)
+
+
+def require_essentia(test_case):
+    """
+    Decorator marking a test that requires essentia
+    """
+    return unittest.skipUnless(is_essentia_available(), "test requires essentia")(test_case)
+
+
+def require_pretty_midi(test_case):
+    """
+    Decorator marking a test that requires pretty_midi
+    """
+    return unittest.skipUnless(is_pretty_midi_available(), "test requires pretty_midi")(test_case)
 
 
 def cmd_exists(cmd):

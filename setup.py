@@ -17,25 +17,26 @@ Simple check list from AllenNLP repo: https://github.com/allenai/allennlp/blob/m
 
 To create the package for pypi.
 
-1. Run `make pre-release` (or `make pre-patch` for a patch release) then run `make fix-copies` to fix the index of the
-   documentation.
+1. Create the release branch named: v<RELEASE>-release, for example v4.19-release. For a patch release checkout the
+   current release branch.
 
    If releasing on a special branch, copy the updated README.md on the main branch for your the commit you will make
    for the post-release and run `make fix-copies` on the main branch as well.
 
-2. Run Tests for Amazon Sagemaker. The documentation is located in `./tests/sagemaker/README.md`, otherwise @philschmid.
+2. Run `make pre-release` (or `make pre-patch` for a patch release) and commit these changes with the message:
+   "Release: <VERSION>" and push.
 
-3. Unpin specific versions from setup.py that use a git install.
+3. Go back to the main branch and run `make post-release` then `make fix-copies`. Commit these changes with the
+   message "v<NEXT_VERSION>.dev.0" and push to main.
 
-4. Checkout the release branch (v<RELEASE>-release, for example v4.19-release), and commit these changes with the
-   message: "Release: <VERSION>" and push.
+# If you were just cutting the branch in preparation for a release, you can stop here for now.
 
-5. Wait for the tests on main to be completed and be green (otherwise revert and fix bugs)
+4. Wait for the tests on the release branch to be completed and be green (otherwise revert and fix bugs)
 
-6. Add a tag in git to mark the release: "git tag v<VERSION> -m 'Adds tag v<VERSION> for pypi' "
+5. On the release branch, add a tag in git to mark the release: "git tag v<VERSION> -m 'Adds tag v<VERSION> for pypi' "
    Push the tag to git: git push --tags origin v<RELEASE>-release
 
-7. Build both the sources and the wheel. Do not change anything in setup.py between
+6. Build both the sources and the wheel. Do not change anything in setup.py between
    creating the wheel and the source distribution (obviously).
 
    Run `make build-release`. This will build the release and do some sanity checks for you. If this ends with an error
@@ -43,7 +44,7 @@ To create the package for pypi.
 
    You should now have a /dist directory with both .whl and .tar.gz source versions.
 
-8. Check that everything looks correct by uploading the package to the pypi test server:
+7. Check that everything looks correct by uploading the package to the pypi test server:
 
    twine upload dist/* -r testpypi
    (pypi suggest using twine as other methods upload files via plaintext.)
@@ -60,13 +61,10 @@ To create the package for pypi.
 
    If making a patch release, double check the bug you are patching is indeed resolved.
 
-9. Upload the final version to actual pypi:
+8. Upload the final version to actual pypi:
    twine upload dist/* -r pypi
 
-10. Copy the release notes from RELEASE.md to the tag in github once everything is looking hunky-dory.
-
-11. Run `make post-release` then run `make fix-copies`. If you were on a branch for the release,
-    you need to go back to main before executing this.
+9. Copy the release notes from RELEASE.md to the tag in github once everything is looking hunky-dory.
 """
 
 import os
@@ -97,7 +95,7 @@ if stale_egg_info.exists():
 # 1. all dependencies should be listed here with their version requirements if any
 # 2. once modified, run: `make deps_table_update` to update src/transformers/dependency_versions_table.py
 _deps = [
-    "Pillow",
+    "Pillow<10.0.0",
     "accelerate>=0.20.3",
     "av==9.2.0",  # Latest version of PyAV (10.0.0) has issues with audio stream.
     "beautifulsoup4",
@@ -115,17 +113,17 @@ _deps = [
     "faiss-cpu",
     "fastapi",
     "filelock",
-    "flax>=0.4.1,<=0.6.9",
+    "flax>=0.4.1,<=0.7.0",
     "ftfy",
     "fugashi>=1.0",
     "GitPython<3.1.19",
     "hf-doc-builder>=0.3.0",
-    "huggingface-hub>=0.14.1,<1.0",
+    "huggingface-hub>=0.15.1,<1.0",
     "importlib_metadata",
     "ipadic>=1.0.0,<2.0",
     "isort>=5.5.4",
-    "jax>=0.2.8,!=0.3.2,<=0.3.6",
-    "jaxlib>=0.1.65,<=0.3.6",
+    "jax>=0.4.1,<=0.4.13",
+    "jaxlib>=0.4.1,<=0.4.13",
     "jieba",
     "kenlm",
     "keras-nlp>=0.3.1",
@@ -142,10 +140,10 @@ _deps = [
     "packaging>=20.0",
     "parameterized",
     "phonemizer",
-    "protobuf<=3.20.3",
+    "protobuf",
     "psutil",
     "pyyaml>=5.1",
-    "pydantic",
+    "pydantic<2",
     "pytest>=7.2.0",
     "pytest-timeout",
     "pytest-xdist",
@@ -427,7 +425,7 @@ install_requires = [
 
 setup(
     name="transformers",
-    version="4.31.0.dev0",  # expected format is one of x.y.z.dev0, or x.y.z.rc1 or x.y.z (no to dashes, yes to dots)
+    version="4.33.0.dev0",  # expected format is one of x.y.z.dev0, or x.y.z.rc1 or x.y.z (no to dashes, yes to dots)
     author="The Hugging Face team (past and future) with the help of all our contributors (https://github.com/huggingface/transformers/graphs/contributors)",
     author_email="transformers@huggingface.co",
     description="State-of-the-art Machine Learning for JAX, PyTorch and TensorFlow",
@@ -444,7 +442,7 @@ setup(
     extras_require=extras,
     entry_points={"console_scripts": ["transformers-cli=transformers.commands.transformers_cli:main"]},
     python_requires=">=3.8.0",
-    install_requires=install_requires,
+    install_requires=list(install_requires),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",

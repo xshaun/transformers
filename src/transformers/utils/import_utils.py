@@ -98,6 +98,7 @@ _natten_available = _is_package_available("natten")
 _onnx_available = _is_package_available("onnx")
 _openai_available = _is_package_available("openai")
 _optimum_available = _is_package_available("optimum")
+_auto_gptq_available = _is_package_available("auto_gptq")
 _pandas_available = _is_package_available("pandas")
 _peft_available = _is_package_available("peft")
 _phonemizer_available = _is_package_available("phonemizer")
@@ -112,6 +113,7 @@ _sacremoses_available = _is_package_available("sacremoses")
 _safetensors_available = _is_package_available("safetensors")
 _scipy_available = _is_package_available("scipy")
 _sentencepiece_available = _is_package_available("sentencepiece")
+_is_seqio_available = _is_package_available("seqio")
 _sklearn_available = importlib.util.find_spec("sklearn") is not None
 if _sklearn_available:
     try:
@@ -183,6 +185,22 @@ else:
         logger.info("Disabling Tensorflow because USE_TORCH is set")
 
 
+_essentia_available = importlib.util.find_spec("essentia") is not None
+try:
+    _essentia_version = importlib.metadata.version("essentia")
+    logger.debug(f"Successfully imported essentia version {_essentia_version}")
+except importlib.metadata.PackageNotFoundError:
+    _essentia_version = False
+
+
+_pretty_midi_available = importlib.util.find_spec("pretty_midi") is not None
+try:
+    _pretty_midi_version = importlib.metadata.version("pretty_midi")
+    logger.debug(f"Successfully imported pretty_midi version {_pretty_midi_version}")
+except importlib.metadata.PackageNotFoundError:
+    _pretty_midi_available = False
+
+
 ccl_version = "N/A"
 _is_ccl_available = (
     importlib.util.find_spec("torch_ccl") is not None
@@ -240,6 +258,14 @@ def is_librosa_available():
     return _librosa_available
 
 
+def is_essentia_available():
+    return _essentia_available
+
+
+def is_pretty_midi_available():
+    return _pretty_midi_available
+
+
 def is_torch_cuda_available():
     if is_torch_available():
         import torch
@@ -247,6 +273,15 @@ def is_torch_cuda_available():
         return torch.cuda.is_available()
     else:
         return False
+
+
+def is_torch_mps_available():
+    if is_torch_available():
+        import torch
+
+        if hasattr(torch.backends, "mps"):
+            return torch.backends.mps.is_available()
+    return False
 
 
 def is_torch_bf16_gpu_available():
@@ -387,6 +422,25 @@ def is_torch_neuroncore_available(check_device=True):
     return False
 
 
+@lru_cache()
+def is_torch_npu_available(check_device=False):
+    "Checks if `torch_npu` is installed and potentially if a NPU is in the environment"
+    if not _torch_available or importlib.util.find_spec("torch_npu") is None:
+        return False
+
+    import torch
+    import torch_npu  # noqa: F401
+
+    if check_device:
+        try:
+            # Will raise a RuntimeError if no NPU is found
+            _ = torch.npu.device_count()
+            return torch.npu.is_available()
+        except RuntimeError:
+            return False
+    return hasattr(torch, "npu") and torch.npu.is_available()
+
+
 def is_torchdynamo_available():
     if not is_torch_available():
         return False
@@ -475,7 +529,14 @@ def is_ipex_available():
 
 
 def is_bitsandbytes_available():
-    return _bitsandbytes_available
+    if not is_torch_available():
+        return False
+
+    # bitsandbytes throws an error if cuda is not available
+    # let's avoid that by adding a simple check
+    import torch
+
+    return _bitsandbytes_available and torch.cuda.is_available()
 
 
 def is_torchdistx_available():
@@ -498,6 +559,10 @@ def is_sentencepiece_available():
     return _sentencepiece_available
 
 
+def is_seqio_available():
+    return _is_seqio_available
+
+
 def is_protobuf_available():
     if importlib.util.find_spec("google") is None:
         return False
@@ -512,6 +577,10 @@ def is_accelerate_available(min_version: str = None):
 
 def is_optimum_available():
     return _optimum_available
+
+
+def is_auto_gptq_available():
+    return _auto_gptq_available
 
 
 def is_optimum_neuron_available():
@@ -532,7 +601,10 @@ def is_vision_available():
         try:
             package_version = importlib.metadata.version("Pillow")
         except importlib.metadata.PackageNotFoundError:
-            return False
+            try:
+                package_version = importlib.metadata.version("Pillow-SIMD")
+            except importlib.metadata.PackageNotFoundError:
+                return False
         logger.debug(f"Detected PIL version {package_version}")
     return _pil_available
 
@@ -938,6 +1010,27 @@ CCL_IMPORT_ERROR = """
 Please note that you may need to restart your runtime after installation.
 """
 
+# docstyle-ignore
+ESSENTIA_IMPORT_ERROR = """
+{0} requires essentia library. But that was not found in your environment. You can install them with pip:
+`pip install essentia==2.1b6.dev1034`
+Please note that you may need to restart your runtime after installation.
+"""
+
+# docstyle-ignore
+LIBROSA_IMPORT_ERROR = """
+{0} requires thes librosa library. But that was not found in your environment. You can install them with pip:
+`pip install librosa`
+Please note that you may need to restart your runtime after installation.
+"""
+
+# docstyle-ignore
+PRETTY_MIDI_IMPORT_ERROR = """
+{0} requires thes pretty_midi library. But that was not found in your environment. You can install them with pip:
+`pip install pretty_midi`
+Please note that you may need to restart your runtime after installation.
+"""
+
 DECORD_IMPORT_ERROR = """
 {0} requires the decord library but it was not found in your environment. You can install it with pip: `pip install
 decord`. Please note that you may need to restart your runtime after installation.
@@ -953,16 +1046,24 @@ JIEBA_IMPORT_ERROR = """
 jieba`. Please note that you may need to restart your runtime after installation.
 """
 
+PEFT_IMPORT_ERROR = """
+{0} requires the peft library but it was not found in your environment. You can install it with pip: `pip install
+peft`. Please note that you may need to restart your runtime after installation.
+"""
+
 BACKENDS_MAPPING = OrderedDict(
     [
         ("bs4", (is_bs4_available, BS4_IMPORT_ERROR)),
         ("datasets", (is_datasets_available, DATASETS_IMPORT_ERROR)),
         ("detectron2", (is_detectron2_available, DETECTRON2_IMPORT_ERROR)),
+        ("essentia", (is_essentia_available, ESSENTIA_IMPORT_ERROR)),
         ("faiss", (is_faiss_available, FAISS_IMPORT_ERROR)),
         ("flax", (is_flax_available, FLAX_IMPORT_ERROR)),
         ("ftfy", (is_ftfy_available, FTFY_IMPORT_ERROR)),
         ("pandas", (is_pandas_available, PANDAS_IMPORT_ERROR)),
         ("phonemizer", (is_phonemizer_available, PHONEMIZER_IMPORT_ERROR)),
+        ("pretty_midi", (is_pretty_midi_available, PRETTY_MIDI_IMPORT_ERROR)),
+        ("librosa", (is_librosa_available, LIBROSA_IMPORT_ERROR)),
         ("protobuf", (is_protobuf_available, PROTOBUF_IMPORT_ERROR)),
         ("pyctcdecode", (is_pyctcdecode_available, PYCTCDECODE_IMPORT_ERROR)),
         ("pytesseract", (is_pytesseract_available, PYTESSERACT_IMPORT_ERROR)),
@@ -986,6 +1087,7 @@ BACKENDS_MAPPING = OrderedDict(
         ("decord", (is_decord_available, DECORD_IMPORT_ERROR)),
         ("cython", (is_cython_available, CYTHON_IMPORT_ERROR)),
         ("jieba", (is_jieba_available, JIEBA_IMPORT_ERROR)),
+        ("peft", (is_peft_available, PEFT_IMPORT_ERROR)),
     ]
 )
 

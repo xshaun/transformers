@@ -96,7 +96,7 @@ class RotaryEmbedding(torch.nn.Module):
         # Generate and save the inverse frequency buffer (non trainable)
         inv_freq = 1.0 / (10000 ** (torch.arange(0, dim, 2).float() / dim))
         inv_freq = inv_freq
-        self.register_buffer("inv_freq", inv_freq, persistent=False)
+        self.register_buffer("inv_freq", inv_freq)
 
         self._seq_len_cached = None
         self._cos_cached = None
@@ -690,7 +690,7 @@ class EsmPreTrainedModel(PreTrainedModel):
 
     config_class = EsmConfig
     base_model_prefix = "esm"
-    _no_split_modules = ["EsmLayer", "EsmFoldTriangularSelfAttentionBlock"]
+    _no_split_modules = ["EsmLayer", "EsmFoldTriangularSelfAttentionBlock", "EsmEmbeddings"]
 
     # Copied from transformers.models.bert.modeling_bert.BertPreTrainedModel._init_weights
     def _init_weights(self, module):
@@ -876,6 +876,7 @@ class EsmModel(EsmPreTrainedModel):
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
+            self.warn_if_padding_and_no_attention_mask(input_ids, attention_mask)
             input_shape = input_ids.size()
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]

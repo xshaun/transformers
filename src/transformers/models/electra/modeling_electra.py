@@ -135,7 +135,7 @@ def load_tf_weights_in_electra(model, config, tf_checkpoint_path, discriminator_
             try:
                 if pointer.shape != array.shape:
                     raise ValueError(f"Pointer shape {pointer.shape} and array shape {array.shape} mismatched")
-            except AssertionError as e:
+            except ValueError as e:
                 e.args += (pointer.shape, array.shape)
                 raise
             print(f"Initialize PyTorch weight {name}", original_name)
@@ -868,6 +868,7 @@ class ElectraModel(ElectraPreTrainedModel):
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
+            self.warn_if_padding_and_no_attention_mask(input_ids, attention_mask)
             input_shape = input_ids.size()
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]
